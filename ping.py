@@ -20,28 +20,26 @@ while True:
     response_list = ping('8.8.8.8', size=32, count=1) # pinging 8.8.8.8 once (only once because i dont want too much overflow)
 
     the_ping = round(response_list.rtt_avg_ms) # rounded the ping ex 28.1 rounded to 28
-
-    if the_ping >= 120 : #if the ping is higher or equal to 120 execute code below
-        print(nowtime,': Your Internet is not working correctly. Your ping is %dms.' % the_ping) # print the current ping
-
+    
+    def update_db():        
         my_cursor.execute('INSERT INTO ping_results (ping) VALUES(%d);' % the_ping) # Insert in to ping_results table the current ping
         my_cursor.execute('DELETE FROM ping_results WHERE the_time < NOW() - INTERVAL 1 DAY;') # Delete the data from ping_results if they are older than 1 day for limited storage
         mydb.commit() # This sends a COMMIT statement to the MySQL server.
 
+    if the_ping >= 120 : #if the ping is higher or equal to 120 execute code below
+        print(nowtime,': Your Internet is not working correctly. Your ping is %dms.' % the_ping) # print the current ping
+        
+        update_db()
         reload_time = 10 # more frequent ping checks if the ping is higher than 120. In this case every 10 seconds
 
     elif the_ping >= 2000 :
         print(nowtime,': Your Internet is not working!! Your ping returns a timeout!!') # print the current ping
 
-        my_cursor.execute('INSERT INTO ping_results (ping) VALUES(%d);' % the_ping) # Insert in to ping_results table the current ping
-        my_cursor.execute('DELETE FROM ping_results WHERE the_time < NOW() - INTERVAL 1 DAY;') # Delete the data from ping_results if they are older than 1 day for limited storage
-        mydb.commit()   # This sends a COMMIT statement to the MySQL server.
+        update_db()
     else: #Else if the ping is lower than 120 execute code below
         print(nowtime,': Your Internet is working. Your ping is %dms.' % the_ping) # print the current ping
 
-        my_cursor.execute('INSERT INTO ping_results (ping) VALUES(%d);' % the_ping) # Insert in to ping_results table the current ping
-        my_cursor.execute('DELETE FROM ping_results WHERE the_time < NOW() - INTERVAL 1 DAY;') # Delete the data from ping_results if they are older than 1 day for limited storage
-        mydb.commit() # This sends a COMMIT statement to the MySQL server.
+        update_db()
 
         reload_time = 60 # less frequent ping checks if the ping is lower than 120. In this case every 60 seconds
     sleep(reload_time)
